@@ -5,18 +5,16 @@
 import os
 import json
 from parse import parse
-from plistlib import readPlist
+import plistlib
 from pprint import pprint
 
 def parse_file(_filepath, _config=None, _extra_data_receiver=None):
 	path,name = os.path.split(_filepath)
 	pre,ext = os.path.splitext(name)
 	if ext == ".plist":
-		try:
-			data = readPlist(_filepath)
-		except Exception:
-			print("fail: read plist file failed >", _filepath)
-			return
+		with open(_filepath, 'rb') as fp:
+			data = plistlib.load(fp)
+
 		return parse_plistdata(data)
 	elif ext == ".fnt":
 		with open(_filepath, "r") as f:
@@ -98,7 +96,7 @@ def _parse_str(_name, _str):
 	return _mapping_list({}, _name, json.loads(_str.replace("{", "[").replace("}", "]")))
 
 def parse_plistdata(_data):
-	fmt = _data.metadata.format
+	fmt = _data['metadata']['format']
 	# check file format
 	if fmt not in (0, 1, 2, 3):
 		print("fail: unsupport format " + str(fmt))
@@ -107,7 +105,7 @@ def parse_plistdata(_data):
 	data = {}
 	frame_data_list = []
 
-	for (name,config) in _data.frames.items():
+	for (name,config) in _data['frames'].items():
 		frame_data = {}
 		if fmt == 0:
 			source_size = {
@@ -126,9 +124,9 @@ def parse_plistdata(_data):
 				"y": config.get("offsetY", False),
 			}
 		elif fmt == 1 or fmt == 2:
-			frame         = _parse_str([["x","y"],["w","h"]], config.frame)
-			center_offset = _parse_str(["x","y"], config.offset)
-			source_size   = _parse_str(["w","h"], config.sourceSize)
+			frame         = _parse_str([["x","y"],["w","h"]], config['frame'])
+			center_offset = _parse_str(["x","y"], config['offset'])
+			source_size   = _parse_str(["w","h"], config['sourceSize'])
 			rotated       = config.get("rotated", False)
 			src_rect      = (
 				frame["x"],
@@ -168,6 +166,6 @@ def parse_plistdata(_data):
 
 
 	data["frames"] = frame_data_list
-	data["texture"] = _data.metadata.textureFileName
+	data["texture"] = _data['metadata']['textureFileName']
 
 	return data

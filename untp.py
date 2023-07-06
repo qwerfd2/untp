@@ -7,16 +7,8 @@ import os
 import sys
 import argparse
 import json
-
-try:
-    from . import dataparse
-except:
-    import dataparse
-
-try:
-    from . import pvr
-except:
-    import pvr
+import dataparse
+import pvr
 
 from PIL import Image
 

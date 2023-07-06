@@ -30,7 +30,7 @@ def MX(z, y, sum, s_uEncryptedPvrKeyParts, p, e):
     return ((z>>5^y<<2) + (y>>3^z<<4)) ^ ((sum^y) + (s_uEncryptedPvrKeyParts[(p&3)^e] ^ z))
 
 def _generate_key_parts(content_protection_key):
-    chunks, chunk_size = len(content_protection_key), len(content_protection_key)/4
+    chunks, chunk_size = len(content_protection_key), len(content_protection_key)//4
     return [int(content_protection_key[i:i+chunk_size], 16) for i in range(0, chunks, chunk_size) ]
 
 def _generate_encryption_key(s_uEncryptedPvrKeyParts):
@@ -53,7 +53,6 @@ def _generate_encryption_key(s_uEncryptedPvrKeyParts):
         rounds -= 1
         if not rounds:
             break
-    
     return s_uEncryptionKey
 
 
@@ -78,7 +77,6 @@ def _pvr_head(_data):
 def _decrypt_pvr_content(body, encryption_key):
     b = 0
     i = 0
-
     # encrypt first part completely
     for i in range(0, min(len(body), securelen)):
         num = struct.unpack("I", body[i])[0]
@@ -107,23 +105,19 @@ def _decrypt_pvr(image_file, out_file, content_protection_key):
         head = fr.read(12)
         byte = fr.read(4)
 
-        head_info = _pvr_head(head + byte)
-        if head_info["sig"] != "CCZp":
-            return
-
         body = []
         tril = None
-        while byte != "":
+        while byte != b'':
             if len(byte) < 4:
                 tril = byte
             else:
                 body.append(byte)
             byte = fr.read(4)
-
+        print("decryptpvr called")
         _decrypt_pvr_content(body, encryption_key)
 
         with open(out_file, "wb") as fw:
-            head = head[:3] + "!" + head[3+1:]
+            head = head[:3] + b'!' + head[3+1:]
             fw.write(head)
             for num in body:
                 if isinstance(num, int):
@@ -133,12 +127,7 @@ def _decrypt_pvr(image_file, out_file, content_protection_key):
             fw.write(tril)
 
 def _is_protectionn_pvr(image_file):
-    with open(image_file, "rb") as fr:
-        head_info = _pvr_head(fr.read(12 + 4))
-        if head_info["sig"] == "CCZp":
-            return True
-
-    return False        
+    return True        
 
 def convert_pvr_to_png(logger, image_file, protection_key=None):
     temp_dir = tempfile.mkdtemp()
@@ -153,7 +142,7 @@ def convert_pvr_to_png(logger, image_file, protection_key=None):
 
     image_path = os.path.join(temp_dir, "temp.pvr.ccz")
     plist_path = os.path.join(temp_dir, "temp.plist")
-
+    print(image_path)
     command = "TexturePacker {temp_dir} --sheet {image_path} --texture-format png --border-padding 0 --shape-padding 0 --disable-rotation --allow-free-size --no-trim --data {plist_path}".format(temp_dir = temp_dir, image_path = image_path, plist_path = plist_path)
     child = sp.Popen(command, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     _, err = child.communicate()

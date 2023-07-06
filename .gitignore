@@ -1,8 +1,0 @@
-*.pyc
-bin
-build
-dist
-untp.egg-info
-tests/data/pvr/normal
-tests/data/v2
-tests/data/pvr/protection
