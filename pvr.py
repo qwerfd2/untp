@@ -124,7 +124,8 @@ def _decrypt_pvr(image_file, out_file, content_protection_key):
                     fw.write(struct.pack('I', num))
                 else:
                     fw.write(num)
-            fw.write(tril)
+            if tril != None:
+                fw.write(tril)
 
 def _is_protectionn_pvr(image_file):
     return True        
@@ -143,7 +144,7 @@ def convert_pvr_to_png(logger, image_file, protection_key=None):
     image_path = os.path.join(temp_dir, "temp.pvr.ccz")
     plist_path = os.path.join(temp_dir, "temp.plist")
     print(image_path)
-    command = "TexturePacker {temp_dir} --sheet {image_path} --texture-format png --border-padding 0 --shape-padding 0 --disable-rotation --allow-free-size --no-trim --data {plist_path}".format(temp_dir = temp_dir, image_path = image_path, plist_path = plist_path)
+    command = "TexturePacker {temp_dir} --sheet {image_path} --texture-format png --border-padding 0 --shape-padding 0 --disable-rotation --allow-free-size --max-width 4096 --max-height 4096 --no-trim --data {plist_path}".format(temp_dir = temp_dir, image_path = image_path, plist_path = plist_path)
     child = sp.Popen(command, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     _, err = child.communicate()
     if err:
